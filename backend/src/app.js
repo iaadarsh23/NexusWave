@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import mongoose from "mongoose";
 import { Server } from "socket.io";
@@ -22,6 +23,10 @@ app.get("/home", (req, res) => {
 	return res.json({ hello: "adarsh" });
 });
 
+app.use(express.json({limit : "40kb"}));
+
+app.use(express.urlencoded({limit : "40kb", extended: true}))
+
 // 5. Handle real-time connections
 io.on("connection", (socket) => {
 	console.log("new socket connected!", socket.id);
@@ -31,9 +36,11 @@ io.on("connection", (socket) => {
 // 6. Start with async function: FIRST connect MongoDB, THEN start server
 const start = async () => {
 	try {
-		const connectDb = await mongoose.connect(
-			"mongodb+srv://adarshtrip2306:nexus@nexuswave.kli0bhb.mongodb.net/"
-		);
+		const uri = process.env.MONGODB_URI;
+		if (!uri) {
+			throw new Error("MONGODB_URI is not set. Define it in your environment (.env)");
+		}
+		const connectDb = await mongoose.connect(uri);
 		console.log(`Database is connected`);
 
 		server.listen(app.get("port"), () => {
